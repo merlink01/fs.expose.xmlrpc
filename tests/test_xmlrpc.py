@@ -58,9 +58,9 @@ class TestExposeXMLRPC(unittest.TestCase):
         cls.test_fs.close()
 
     def test_listdir(self):
-        dirlist = self.proxy.listdir(u'/')
+        dirlist = self.proxy.listdir('/')
         self.assertEqual(dirlist,['top', 'root.txt', 'video.mp4'])
-        dirlist = self.proxy.listdir('/top/middle/bottom/')
+        dirlist = self.proxy.listdir(u'/top/middle/bottom/')
         self.assertEqual(dirlist[0],'☻.txt')
         
         with self.assertRaises(Fault) as err:
