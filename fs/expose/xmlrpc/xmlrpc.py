@@ -20,6 +20,7 @@ from six import PY3
 
 from six.moves.xmlrpc_server import SimpleXMLRPCServer
 import six.moves.xmlrpc_client as xmlrpclib
+import six.moves.cPickle as pickle
 
 from datetime import datetime
 import base64
@@ -37,13 +38,37 @@ class RPCFSInterface(object):
 
     # info keys are restricted to a subset known to work over xmlrpc
     # This fixes an issue with transporting Longs on Py3
-    _allowed_info = ["size",
-                     "created_time",
-                     "modified_time",
-                     "accessed_time",
-                     "st_size",
-                     "st_mode",
-                     "type"]
+    _allowed_methods = ["listdir",
+                        "isdir",
+                        "isfile",
+                        "exists",
+                        "getinfo",
+                        "getdetails",
+                        "setbytes",
+                        "makedir",
+                        "makedirs",
+                        "remove",
+                        "create",
+                        "getmeta",
+                        "getsyspath",
+                        "geturl",
+                        "touch",
+                        "validatepath",
+                        "appendbytes",
+                        "appendtext",
+                        "islink",
+                        "settimes",
+                        "settext",
+                        "setinfo",
+                        "removetree",
+                        "removedir",
+                        "scandir",
+                        
+    
+                        ]
+    _to_pickle = ['getinfo','getdetails']
+    _no_return = ['makedir',"makedirs"]
+    _to_bytes = ['setbytes','appendbytes','appendtext']
 
     def __init__(self, fs):
         super(RPCFSInterface, self).__init__()
@@ -53,18 +78,36 @@ class RPCFSInterface(object):
         # ~ print('Staring Dispatch',method,params)
 
         
-        # ~ return func(*params)
 
-        # ~ print(params)
+
+        if not method in self._allowed_methods:
+            raise errors.Unsupported
         
+        # ~ return func(*params)
         #Debugging
         try: 
-            func = getattr(self.fs, method)    
+            func = getattr(self.fs, method)
+            params = list(params)
+            # ~ print params
             if six.PY2:
-                params = list(params)
+
                 params[0] = params[0].decode('utf-8')
+                
+            if method in self._to_bytes:
+                try:
+                    params[1] = params[1].data
+                except:
+                    raise TypeError('Need an xmlrpc.Binary object')
+            
             returndata = func(*params)
-            # ~ print(repr(returndata))
+
+            if method in self._no_return:
+                returndata = True
+            
+            if method in self._to_pickle:
+                # ~ returndata = pickle.dumps(returndata)
+                # ~ print (returndata.raw)
+                returndata = returndata.raw
             return returndata
         except:
             import traceback
