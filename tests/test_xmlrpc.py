@@ -41,7 +41,7 @@ class TestExposeXMLRPC(unittest.TestCase):
     def setUpClass(cls):
         cls.test_fs = fs.open_fs('mem://')
         cls.server_thread = serve(cls.test_fs, cls.host, cls.port)
-        cls.proxy = xmlrpc_client.ServerProxy("http://%s:%s/"%(cls.host,cls.port),verbose=True)
+        cls.proxy = xmlrpc_client.ServerProxy("http://%s:%s/"%(cls.host,cls.port))#,verbose=True)
         
 
     def setUp(self):
@@ -59,10 +59,37 @@ class TestExposeXMLRPC(unittest.TestCase):
         cls.server_thread.shutdown()
         cls.test_fs.close()
 
+    def test_exists(self):
+        self.assertEqual(self.proxy.exists('/'),True)
+        self.assertEqual(self.proxy.exists('.'),True)
+        self.assertEqual(self.proxy.exists(''),True)
+        self.assertEqual(self.proxy.exists('/top'),True)
+        self.assertEqual(self.proxy.exists('/top/middle/bottom/'),True)
+        self.assertEqual(self.proxy.exists('/notexists'),False)
+        
+    def test_isdir(self):
+        self.assertEqual(self.proxy.isdir('/'),True)
+        self.assertEqual(self.proxy.isdir('.'),True)
+        self.assertEqual(self.proxy.isdir(''),True)
+        self.assertEqual(self.proxy.isdir('/top'),True)
+        self.assertEqual(self.proxy.isdir('/root.txt'),False)
+        self.assertEqual(self.proxy.isdir('/top/middle/bottom/'),True)
+        self.assertEqual(self.proxy.isdir('/notexists'),False)
+        
+    def test_isfile(self):
+        self.assertEqual(self.proxy.isfile('/'),False)
+        self.assertEqual(self.proxy.isfile('.'),False)
+        self.assertEqual(self.proxy.isfile(''),False)
+        self.assertEqual(self.proxy.isfile('/top'),False)
+        self.assertEqual(self.proxy.isfile('/root.txt'),True)
+        self.assertEqual(self.proxy.isfile('/top/middle/bottom/'),False)
+        self.assertEqual(self.proxy.isfile('/notexists'),False)
+        
+        
     def test_listdir(self):
         dirlist = self.proxy.listdir('/')
         self.assertEqual(dirlist,['top', 'root.txt', 'video.mp4'])
-        dirlist = self.proxy.listdir(u'/top/middle/bottom/')
+        dirlist = self.proxy.listdir('/top/middle/bottom/')
         self.assertEqual(dirlist[0],'☻.txt')
         
         with self.assertRaises(Fault) as err:

@@ -50,7 +50,7 @@ class RPCFSInterface(object):
         self.fs = fs
 
     def _dispatch(self, method, params):
-        print('Staring Dispatch')
+        # ~ print('Staring Dispatch',method,params)
 
         
         # ~ return func(*params)
@@ -64,7 +64,7 @@ class RPCFSInterface(object):
                 params = list(params)
                 params[0] = params[0].decode('utf-8')
             returndata = func(*params)
-            print(repr(returndata))
+            # ~ print(repr(returndata))
             return returndata
         except:
             import traceback
