@@ -2,6 +2,8 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+__all__ = ['TestExposeXMLRPC']
+
 import textwrap
 import threading
 import unittest
@@ -39,7 +41,7 @@ class TestExposeXMLRPC(unittest.TestCase):
     def setUpClass(cls):
         cls.test_fs = fs.open_fs('mem://')
         cls.server_thread = serve(cls.test_fs, cls.host, cls.port)
-        cls.proxy = xmlrpc_client.ServerProxy("http://%s:%s/"%(cls.host,cls.port))#,verbose=True)
+        cls.proxy = xmlrpc_client.ServerProxy("http://%s:%s/"%(cls.host,cls.port),verbose=True)
         
 
     def setUp(self):

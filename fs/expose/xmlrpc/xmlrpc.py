@@ -50,16 +50,27 @@ class RPCFSInterface(object):
         self.fs = fs
 
     def _dispatch(self, method, params):
+        print('Staring Dispatch')
 
-        func = getattr(self.fs, method)            
+        
         # ~ return func(*params)
+
+        # ~ print(params)
         
         #Debugging
         try: 
-            return func(*params)
+            func = getattr(self.fs, method)    
+            if six.PY2:
+                params = list(params)
+                params[0] = params[0].decode('utf-8')
+            returndata = func(*params)
+            print(repr(returndata))
+            return returndata
         except:
             import traceback
+            print('############## Traceback from Server ####################')
             traceback.print_exc()
+            print('############## Traceback from Server ####################')
             raise
 
     # ~ def encode_path(self, path):
