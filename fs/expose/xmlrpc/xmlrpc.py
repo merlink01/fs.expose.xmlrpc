@@ -14,6 +14,9 @@ an FS object, which can then be exposed using whatever server you choose
 (e.g. Twisted's XML-RPC server).
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 
 import six
 from six import PY3
@@ -38,80 +41,99 @@ class RPCFSInterface(object):
 
     # info keys are restricted to a subset known to work over xmlrpc
     # This fixes an issue with transporting Longs on Py3
-    _allowed_methods = ["listdir",
+    _allowed_methods = [
+                        "listdir",
                         "isdir",
                         "isfile",
                         "exists",
                         "getinfo",
-                        "getdetails",
                         "setbytes",
                         "makedir",
                         "makedirs",
                         "remove",
                         "create",
-                        "getmeta",
-                        "getsyspath",
-                        "geturl",
                         "touch",
                         "validatepath",
-                        "appendbytes",
-                        "appendtext",
                         "islink",
-                        "settimes",
-                        "settext",
-                        "setinfo",
                         "removetree",
                         "removedir",
-                        "scandir",
+                        "getbytes",
+                        "getsize",
+                        "isempty",
+                        "move",
+                        "movedir",
                         
-    
+                        # ~ "scandir",
+                        # ~ "settimes",
+                        # ~ "settext",
+                        # ~ "setinfo",
+                        # ~ "match",
+                        # ~ "getsyspath",
+                        # ~ "gettext",
+                        # ~ "isclosed",
+                        "copy",
+                        # ~ "copydir",
+                        # ~ "desc",
+                        # ~ "appendbytes",
+                        # ~ "appendtext",
+                        "getmeta",
+                        "gettype",
+                        # ~ "getsyspath",
+                        # ~ "geturl",
+                        # ~ "getdetails",
                         ]
-    _to_pickle = ['getinfo','getdetails']
-    _no_return = ['makedir',"makedirs"]
-    _to_bytes = ['setbytes','appendbytes','appendtext']
+
 
     def __init__(self, fs):
         super(RPCFSInterface, self).__init__()
         self.fs = fs
 
     def _dispatch(self, method, params):
-        # ~ print('Staring Dispatch',method,params)
-
-        
 
 
         if not method in self._allowed_methods:
+            print('Server',method,params,'-->','Unsupported')
             raise errors.Unsupported
+        
         
         # ~ return func(*params)
         #Debugging
         try: 
             func = getattr(self.fs, method)
             params = list(params)
-            # ~ print params
-            if six.PY2:
 
+            if six.PY2:
                 params[0] = params[0].decode('utf-8')
+                if method in ['copy']:
+                    params[1] = params[1].decode('utf-8')
                 
-            if method in self._to_bytes:
+                
+            if method in ['setbytes','settext','appendbytes','appendtext']:
                 try:
                     params[1] = params[1].data
                 except:
+                    print('Server',method,params,'-->','TypeError: Need an xmlrpc.Binary object')
                     raise TypeError('Need an xmlrpc.Binary object')
             
             returndata = func(*params)
 
-            if method in self._no_return:
+            if method in ['makedir',"makedirs"]:
                 returndata = True
             
-            if method in self._to_pickle:
-                # ~ returndata = pickle.dumps(returndata)
-                # ~ print (returndata.raw)
+            if method in ['getinfo','getdetails']:
                 returndata = returndata.raw
+                
+            if method in ['getbytes']:
+                returndata = xmlrpclib.Binary(returndata)
+            try:
+                print('Server',method,params,'-->',returndata)
+            except:
+                pass
             return returndata
         except:
             import traceback
             print('############## Traceback from Server ####################')
+            print('Server',method,params,'-->','Error')
             traceback.print_exc()
             print('############## Traceback from Server ####################')
             raise
@@ -260,7 +282,7 @@ class RPCFSServer(SimpleXMLRPCServer):
     attribute "serve_more_requests" to False.
     """
     
-    def __init__(self, fs, addr, requestHandler=None, logRequests=None):
+    def __init__(self, fs, addr, requestHandler=None, logRequests=False):
         print(addr)
         kwds = dict(allow_none=True)
         if requestHandler is not None:
