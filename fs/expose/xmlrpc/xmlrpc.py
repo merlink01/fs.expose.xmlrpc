@@ -176,7 +176,7 @@ class RPCFSServer(SimpleXMLRPCServer):
     attribute "serve_more_requests" to False.
     """
     
-    def __init__(self, fs, addr, requestHandler=None):
+    def __init__(self, fs, addr, requestHandler=None, logRequests=True):
         kwds = dict(allow_none=True)
         if requestHandler is not None:
             kwds['requestHandler'] = requestHandler
