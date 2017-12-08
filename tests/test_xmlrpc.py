@@ -98,7 +98,7 @@ class XMLRPC_Client_FS(object):
                 raise errorobj(err,'')
             elif 'exceptions.TypeError' in err:
                 raise TypeError(err)
-            elif 'xml.parsers.expat.ExpatError' in err:
+            elif 'ExpatError' in err:
                 raise errors.InvalidCharsInPath(err)
             else:
                 print(err)
