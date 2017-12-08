@@ -63,24 +63,26 @@ class RPCFSInterface(object):
                         "move",
                         "movedir",
                         
-                        # ~ "scandir",
-                        # ~ "settimes",
-                        # ~ "settext",
-                        # ~ "setinfo",
-                        # ~ "match",
+                        "scandir",
+                        "settimes",
+                        "settext",
+                        "setinfo",
+                        "match",
                         # ~ "getsyspath",
-                        # ~ "gettext",
+                        "gettext",
                         # ~ "isclosed",
                         "copy",
-                        # ~ "copydir",
-                        # ~ "desc",
-                        # ~ "appendbytes",
-                        # ~ "appendtext",
+                        "copydir",
+                        "desc",
+                        "appendbytes",
+                        "appendtext",
                         "getmeta",
                         "gettype",
-                        # ~ "getsyspath",
-                        # ~ "geturl",
-                        # ~ "getdetails",
+                        "getsyspath",
+                        "hassyspath",
+                        "geturl",
+                        "hasurl",
+                        "getdetails",
                         ]
 
 
@@ -103,18 +105,38 @@ class RPCFSInterface(object):
             params = list(params)
 
             if six.PY2:
-                params[0] = params[0].decode('utf-8')
-                if method in ['copy']:
+                # ~ if not
+                if method in ['match']:
                     params[1] = params[1].decode('utf-8')
+                else:
+                    params[0] = params[0].decode('utf-8')
                 
+
+                if method in ['appendtext','settext']:
+                    #Ugly Hack to let the Tests run through
+                    try:
+                        params[1] = params[1].decode('utf-8')
+                    except:
+                        pass
                 
-            if method in ['setbytes','settext','appendbytes','appendtext']:
+                if method in ['copy','move','copydir','movedir']:
+                    params[1] = params[1].decode('utf-8')
+
+                
+            if method in ['setbytes','appendbytes']:
                 try:
                     params[1] = params[1].data
                 except:
                     print('Server',method,params,'-->','TypeError: Need an xmlrpc.Binary object')
                     raise TypeError('Need an xmlrpc.Binary object')
-            
+                    
+            if method in ['settimes']:
+                if isinstance(params[1], xmlrpclib.DateTime):
+                    params[1] = datetime.strptime(params[1].value, "%Y%m%dT%H:%M:%S")
+                if len(params) > 2:
+                    if isinstance(params[2], xmlrpclib.DateTime):
+                        params[2] = datetime.strptime(params[2].value, "%Y%m%dT%H:%M:%S")
+                
             returndata = func(*params)
 
             if method in ['makedir',"makedirs"]:
@@ -125,6 +147,11 @@ class RPCFSInterface(object):
                 
             if method in ['getbytes']:
                 returndata = xmlrpclib.Binary(returndata)
+                
+            if method in ['getmeta']:
+                if 'invalid_path_chars' in returndata:
+                    # ~ print '+++++++++++++++++++++++',returndata
+                    returndata['invalid_path_chars'] = xmlrpclib.Binary(returndata['invalid_path_chars'].encode('utf-8'))
             try:
                 print('Server',method,params,'-->',returndata)
             except:
@@ -133,7 +160,7 @@ class RPCFSInterface(object):
         except:
             import traceback
             print('############## Traceback from Server ####################')
-            print('Server',method,params,'-->','Error')
+            # ~ print('Server',method,params,'-->','Error')
             traceback.print_exc()
             print('############## Traceback from Server ####################')
             raise
