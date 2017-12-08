@@ -386,9 +386,7 @@ class TestExposeXMLRPC(unittest.TestCase,FSTestCases):
     def test_makedirs(self):
         self.assertFalse(self.fs.exists('foo'))
         self.fs.makedirs('foo')
-        self.assertEqual(self.fs.isdir('foo'),
-                         None,
-                         True)
+        self.assertEqual(self.fs.isdir('foo'),True)
 
         self.fs.makedirs('foo/bar/baz')
         self.assertTrue(self.fs.isdir('foo/bar'))
@@ -397,7 +395,7 @@ class TestExposeXMLRPC(unittest.TestCase,FSTestCases):
         with self.assertRaises(errors.DirectoryExists):
             self.fs.makedirs('foo/bar/baz')
         #no kwargs supported
-        self.fs.makedirs('foo/bar/baz', True)
+        self.fs.makedirs('foo/bar/baz', None, True)
         # ~ self.fs.makedirs('foo/bar/baz', recreate=True)
 
         self.fs.setbytes('foo.bin', b'test')
